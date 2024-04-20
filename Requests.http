@@ -1,0 +1,51 @@
+@api = http://localhost:3000
+
+
+### Create a new wallet
+
+POST {{api}}/wallets
+Accept: application/json
+Content-Type: application/json
+
+{
+  "owner": "Jérémy Sorant"
+}
+
+
+### Get wallets
+
+GET {{api}}/
+Accept: application/json
+
+
+### Get a wallet in a specific currency
+
+GET {{api}}/wallets/6622ad4a37ada5a5aba4d96b
+Accept: application/json
+Content-Type: application/json
+
+{
+  "currency": "JPY"
+}
+
+### Add money into wallet
+
+POST {{api}}/wallets/6622ad4a37ada5a5aba4d96b/add
+Accept: application/json
+Content-Type: application/json
+
+{
+  "amount": "2.08"
+}
+
+
+### Remove money from wallet
+
+POST {{api}}/wallets/6622ad4a37ada5a5aba4d96b/remove
+Accept: application/json
+Content-Type: application/json
+
+{
+  "amount": "1.01"
+}
+
