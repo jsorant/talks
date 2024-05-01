@@ -1,14 +1,18 @@
 {
-  "name": "boilerplate-kata",
+  "name": "wallets-backend",
   "version": "1.0.0",
   "license": "proprietary",
   "devDependencies": {
+    "@testcontainers/mongodb": "^10.9.0",
     "@types/express": "^4.17.21",
     "@types/node": "^20.12.7",
+    "@types/supertest": "^6.0.2",
     "@vitest/coverage-istanbul": "^1.3.1",
     "@vitest/coverage-v8": "^1.2.0",
     "@vitest/ui": "^1.2.0",
     "nodemon": "^3.1.0",
+    "supertest": "^7.0.0",
+    "testcontainers": "^10.9.0",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.5",
     "vitest": "^1.2.0",
@@ -16,7 +20,7 @@
   },
   "scripts": {
     "dev": "nodemon src/Main.ts",
-    "test": "vitest --ui"
+    "test": "vitest --ui --api 9527"
   },
   "dependencies": {
     "express": "^4.19.2",
