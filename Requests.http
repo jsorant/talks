@@ -1,14 +1,14 @@
 @api = http://localhost:3000
-@walletId = 6632849ac8753a10d8de26a1
+@accountId = 6635fb7d8b1a07dd83cafa3c
 
-### List wallets
+### List accounts
 
 GET {{api}}/
 Accept: application/json
 
-### Create a new wallet
+### Create a new account
 
-POST {{api}}/wallets
+POST {{api}}/accounts
 Accept: application/json
 Content-Type: application/json
 
@@ -16,15 +16,15 @@ Content-Type: application/json
   "owner": "Jérémy Sorant"
 }
 
-### Get a wallet
+### Get an account's balance
 
-GET {{api}}/wallets/{{walletId}}
+GET {{api}}/accounts/{{accountId}}
 Accept: application/json
 Content-Type: application/json
 
-### Get a wallet in JPY currency
+### Get an account's balance in JPY currency
 
-GET {{api}}/wallets/{{walletId}}
+GET {{api}}/accounts/{{accountId}}
 Accept: application/json
 Content-Type: application/json
 
@@ -32,9 +32,9 @@ Content-Type: application/json
   "currency": "JPY"
 }
 
-### Add money into wallet
+### Deposit money into an account
 
-POST {{api}}/wallets/{{walletId}}/add
+POST {{api}}/accounts/{{accountId}}/deposit
 Accept: application/json
 Content-Type: application/json
 
@@ -42,9 +42,9 @@ Content-Type: application/json
   "amount": "1.50"
 }
 
-### Remove money from wallet
+### Withdraw money from an account
 
-POST {{api}}/wallets/{{walletId}}/remove
+POST {{api}}/accounts/{{accountId}}/withdraw
 Accept: application/json
 Content-Type: application/json
 

@@ -1,5 +1,5 @@
 {
-  "name": "wallets-backend",
+  "name": "banking-backend",
   "version": "1.0.0",
   "license": "proprietary",
   "devDependencies": {

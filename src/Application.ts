@@ -1,8 +1,8 @@
-import express, {Express, Request, Response} from "express";
+import express, {Express, NextFunction, Request, Response} from "express";
 import {MongoClient, ObjectId} from "mongodb";
 
 const MONGO_URL = 'mongodb://localhost:27017';
-const DATABASE_NAME = 'FinTech';
+const DATABASE_NAME = 'Banking';
 
 export class Application {
     private expressApp: Express = express();
@@ -11,130 +11,146 @@ export class Application {
     constructor() {
         this.expressApp.use(express.json())
 
-        // Get all wallets
+        // Get all accounts
         // For tests/debug
         this.expressApp.get("/", async (req: Request, res: Response) => {
-            const collection = await this.walletsCollection();
+            const collection = await this.accountsCollection();
             const findResult = await collection.find({}).toArray();
             console.log('Found documents =>', findResult);
 
-            res.send({wallets: findResult});
+            res.send({accounts: findResult});
         });
 
-        // Get a wallet
-        this.expressApp.get("/wallets/:id", async (req: Request, res: Response) => {
+        // Get an account
+        this.expressApp.get("/accounts/:id", async (req: Request, res: Response, next: NextFunction) => {
             const id = req.params.id;
 
-            // Find the wallet
-            const collection = await this.walletsCollection();
+            // Find the account
+            const collection = await this.accountsCollection();
             const findResult = await collection.findOne({_id: new ObjectId(id)});
             console.log('Found documents =>', findResult);
-            
+
             if (findResult === null) {
-                res.status(404).send({error: `Wallet "${id}" not found!`});
+                next(new Error(`Account '${id}' not found!`));
             } else {
-                let amount = findResult.amount;
+                let balance = findResult.transactions.reduce((acc: number, val: any) => {
+                    if (val.type === "deposit") return acc + val.amount;
+                    if (val.type === "withdraw") return acc - val.amount;
+                }, 0);
                 let currency = "EUR";
 
-                // Get JPY wallet value
+                // Get JPY account value
                 if (req.body.currency && req.body.currency === "JPY") {
                     const host = 'api.frankfurter.app';
                     const resp = await fetch(`https://${host}/latest?amount=1&from=EUR&to=JPY`);
                     const data = await resp.json();
-                    amount = amount * data.rates.JPY;
+                    balance = balance * data.rates.JPY;
                     currency = "JPY"
                 }
 
                 res.send({
                     owner: "Jérémy Sorant",
-                    amount,
+                    balance,
                     currency
                 });
             }
         });
 
-        // Create a new wallet
-        this.expressApp.post("/wallets", async (req: Request, res: Response) => {
-            // TODO cannot have Two wallets for the same user
-            const collection = await this.walletsCollection();
-            // Create the new wallet
+        // Create a new account
+        this.expressApp.post("/accounts", async (req: Request, res: Response) => {
+            // TODO cannot have Two accounts for the same user
+            const collection = await this.accountsCollection();
+            // Create the new account
             const insertResult = await collection.insertOne({
                 owner: req.body.owner,
-                amount: 0.0
+                transactions: []
             });
             console.log('Inserted documents =>', insertResult);
 
             res.json({
-                walletId: insertResult.insertedId.toString(),
-                message: "Wallet created."
+                accountId: insertResult.insertedId.toString(),
+                message: "Account created."
             })
         });
 
-        // Add money to a wallet
-        this.expressApp.post("/wallets/:id/add", async (req: Request, res: Response) => {
+        // Deposit
+        this.expressApp.post("/accounts/:id/deposit", async (req: Request, res: Response, next: NextFunction) => {
             const id = req.params.id;
 
-            const collection = await this.walletsCollection();
+            const collection = await this.accountsCollection();
             const findResult = await collection.findOne({_id: new ObjectId(id)});
 
             if (findResult === null) {
-                res.status(404).send({error: `Wallet ${id} not found !`});
+                next(new Error(`Account '${id}' not found!`));
             } else {
                 console.log('Found documents =>', findResult);
-                const newAmount = findResult.amount + parseFloat(req.body.amount);
-                //Update the wallet
+                //TODO amount must be > 0
+                const newTransactions = [...findResult.transactions, {
+                    date: Date.now(),
+                    type: "deposit",
+                    amount: parseFloat(req.body.amount)
+                }];
+                //Update the account
                 const updateResult = await collection.updateOne(
                     {_id: new ObjectId(id)}, {
                         $set:
                             {
-                                amount: newAmount
+                                transactions: newTransactions
                             }
                     });
                 console.log('Updated documents =>', updateResult);
 
                 res.json({
-                    message: `Wallet ${id} updated.`
+                    message: `Account ${id} updated.`
                 })
             }
         });
 
-        // Remove money from a wallet
-        this.expressApp.post("/wallets/:id/remove", async (req: Request, res: Response) => {
+        // Withdraw
+        this.expressApp.post("/accounts/:id/withdraw", async (req: Request, res: Response, next: NextFunction) => {
             const id = req.params.id;
 
-            const collection = await this.walletsCollection();
+            const collection = await this.accountsCollection();
             const findResult = await collection.findOne({_id: new ObjectId(id)});
 
             if (findResult === null) {
-                res.status(404).send({error: `Wallet ${id} not found!`});
+                next(new Error(`Account '${id}' not found!`));
             } else {
                 console.log('Found documents =>', findResult);
-                const newAmount = findResult.amount - parseFloat(req.body.amount);
-                if (newAmount < 0) {
-                    res.status(400).send({error: `Not enough money left!`});
-                } else {
-                    //Update the wallet
-                    const updateResult = await collection.updateOne(
-                        {_id: new ObjectId(id)}, {
-                            $set:
-                                {
-                                    amount: newAmount
-                                }
-                        });
-                    console.log('Updated documents =>', updateResult);
+                //TODO amount must be > 0
+                //TODO balance must be > 0
+                const newTransactions = [...findResult.transactions, {
+                    date: Date.now(),
+                    type: "withdraw",
+                    amount: parseFloat(req.body.amount)
+                }];
+                //Update the account
+                const updateResult = await collection.updateOne(
+                    {_id: new ObjectId(id)}, {
+                        $set:
+                            {
+                                transactions: newTransactions
+                            }
+                    });
+                console.log('Updated documents =>', updateResult);
 
-                    res.json({
-                        message: `Wallet ${id} updated.`
-                    })
-                }
+                res.json({
+                    message: `Account ${id} updated.`
+                })
             }
         });
+
+        this.expressApp.use(this.handleError)
     }
 
-    private async walletsCollection() {
+    private handleError(err: Error, req: Request, res: Response, next: NextFunction): void {
+        res.status(500).json({error: err.message});
+    }
+
+    private async accountsCollection() {
         await this.mongoClient.connect();
         const db = this.mongoClient.db(DATABASE_NAME);
-        return db.collection('wallets');
+        return db.collection('accounts');
     }
 
     start(port: number): void {
