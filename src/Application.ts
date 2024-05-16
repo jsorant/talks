@@ -5,7 +5,7 @@ const MONGO_URL = 'mongodb://localhost:27017';
 const DATABASE_NAME = 'Banking';
 
 export class Application {
-    private expressApp: Express = express();
+    public expressApp: Express = express();
     private mongoClient = new MongoClient(MONGO_URL);
 
     constructor() {

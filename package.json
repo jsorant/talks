@@ -20,7 +20,11 @@
   },
   "scripts": {
     "dev": "nodemon src/Main.ts",
-    "test": "vitest --ui --api 9527"
+    "test:unit": "vitest --ui --api 9527 --project unit",
+    "test:component": "vitest --ui --api 9527 --project component",
+    "test:integration": "vitest --ui --api 9527 --project integration",
+    "test:e2e": "vitest --ui --api 9527 --project e2e",
+    "test:all": "vitest --ui --api 9527"
   },
   "dependencies": {
     "express": "^4.19.2",
